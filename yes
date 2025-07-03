@@ -23,19 +23,17 @@ local Theme = {
     Border = Color3.fromRGB(60, 60, 65),
     Success = Color3.fromRGB(75, 181, 67),
     Warning = Color3.fromRGB(255, 159, 67),
-    Shadow = Color3.fromRGB(0, 0, 0),
-    Glow = Color3.fromRGB(65, 125, 255),
     
     -- Sizes
-    WindowMinSize = Vector2.new(350, 250),
-    ElementHeight = 26,
-    Padding = 6,
-    CornerRadius = 8,
+    WindowMinSize = Vector2.new(400, 300),
+    ElementHeight = 30,
+    Padding = 8,
+    CornerRadius = 6,
     
     -- Fonts
-    Font = Enum.Font.SourceSans,
-    FontBold = Enum.Font.SourceSansBold,
-    FontSize = 13
+    Font = Enum.Font.Gotham,
+    FontBold = Enum.Font.GothamBold,
+    FontSize = 14
 }
 
 -- Utility Functions
@@ -44,34 +42,6 @@ local function CreateCorner(parent, radius)
     corner.CornerRadius = UDim.new(0, radius or Theme.CornerRadius)
     corner.Parent = parent
     return corner
-end
-
-local function CreateShadow(parent)
-    local shadow = Instance.new("Frame")
-    shadow.Name = "Shadow"
-    shadow.Size = UDim2.new(1, 4, 1, 4)
-    shadow.Position = UDim2.new(0, -2, 0, 2)
-    shadow.BackgroundColor3 = Theme.Shadow
-    shadow.BackgroundTransparency = 0.7
-    shadow.BorderSizePixel = 0
-    shadow.ZIndex = parent.ZIndex - 1
-    shadow.Parent = parent.Parent
-    CreateCorner(shadow, Theme.CornerRadius)
-    return shadow
-end
-
-local function CreateGlow(parent)
-    local glow = Instance.new("Frame")
-    glow.Name = "Glow"
-    glow.Size = UDim2.new(1, 8, 1, 8)
-    glow.Position = UDim2.new(0, -4, 0, -4)
-    glow.BackgroundColor3 = Theme.Glow
-    glow.BackgroundTransparency = 0.85
-    glow.BorderSizePixel = 0
-    glow.ZIndex = parent.ZIndex - 2
-    glow.Parent = parent.Parent
-    CreateCorner(glow, Theme.CornerRadius + 2)
-    return glow
 end
 
 local function CreatePadding(parent, padding)
@@ -89,27 +59,19 @@ local function MakeDraggable(frame, handle)
     local dragging = false
     local dragStart = nil
     local startPos = nil
-    local dragDelay = 0.1
-    local dragStartTime = 0
     
     handle = handle or frame
     
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragStartTime = tick()
+            dragging = true
             dragStart = input.Position
             startPos = frame.Position
-            
-            wait(dragDelay)
-            
-            if dragStart and tick() - dragStartTime >= dragDelay then
-                dragging = true
-            end
         end
     end)
     
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and dragStart and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
@@ -118,8 +80,6 @@ local function MakeDraggable(frame, handle)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            dragStart = nil
-            startPos = nil
         end
     end)
 end
@@ -144,26 +104,22 @@ function Window.new(title, size)
     self.MainFrame.Position = UDim2.new(0.5, -(size.X or Theme.WindowMinSize.X)/2, 0.5, -(size.Y or Theme.WindowMinSize.Y)/2)
     self.MainFrame.BackgroundColor3 = Theme.Background
     self.MainFrame.BorderSizePixel = 0
-    self.MainFrame.ZIndex = 2
     self.MainFrame.Parent = self.ScreenGui
     CreateCorner(self.MainFrame)
-    CreateGlow(self.MainFrame)
-    CreateShadow(self.MainFrame)
     
     -- Title bar
     self.TitleBar = Instance.new("Frame")
     self.TitleBar.Name = "TitleBar"
-    self.TitleBar.Size = UDim2.new(1, 0, 0, 28)
+    self.TitleBar.Size = UDim2.new(1, 0, 0, 35)
     self.TitleBar.BackgroundColor3 = Theme.Secondary
     self.TitleBar.BorderSizePixel = 0
-    self.TitleBar.ZIndex = 3
     self.TitleBar.Parent = self.MainFrame
     CreateCorner(self.TitleBar)
     
     -- Title label
     self.TitleLabel = Instance.new("TextLabel")
     self.TitleLabel.Name = "Title"
-    self.TitleLabel.Size = UDim2.new(1, -60, 1, 0)
+    self.TitleLabel.Size = UDim2.new(1, -70, 1, 0)
     self.TitleLabel.Position = UDim2.new(0, 0, 0, 0)
     self.TitleLabel.BackgroundTransparency = 1
     self.TitleLabel.Text = title or "UI Library"
@@ -171,42 +127,38 @@ function Window.new(title, size)
     self.TitleLabel.Font = Theme.FontBold
     self.TitleLabel.TextSize = Theme.FontSize
     self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    self.TitleLabel.ZIndex = 4
     self.TitleLabel.Parent = self.TitleBar
     CreatePadding(self.TitleLabel, Theme.Padding)
     
     -- Close button
     self.CloseButton = Instance.new("TextButton")
     self.CloseButton.Name = "CloseButton"
-    self.CloseButton.Size = UDim2.new(0, 22, 0, 18)
-    self.CloseButton.Position = UDim2.new(1, -26, 0, 5)
+    self.CloseButton.Size = UDim2.new(0, 25, 0, 25)
+    self.CloseButton.Position = UDim2.new(1, -30, 0, 5)
     self.CloseButton.BackgroundColor3 = Theme.Warning
     self.CloseButton.BorderSizePixel = 0
     self.CloseButton.Text = "×"
     self.CloseButton.TextColor3 = Theme.Text
     self.CloseButton.Font = Theme.FontBold
-    self.CloseButton.TextSize = 14
-    self.CloseButton.ZIndex = 4
+    self.CloseButton.TextSize = 16
     self.CloseButton.Parent = self.TitleBar
     CreateCorner(self.CloseButton, 3)
     
     -- Content frame
     self.ContentFrame = Instance.new("Frame")
     self.ContentFrame.Name = "Content"
-    self.ContentFrame.Size = UDim2.new(1, 0, 1, -28)
-    self.ContentFrame.Position = UDim2.new(0, 0, 0, 28)
+    self.ContentFrame.Size = UDim2.new(1, 0, 1, -35)
+    self.ContentFrame.Position = UDim2.new(0, 0, 0, 35)
     self.ContentFrame.BackgroundTransparency = 1
-    self.ContentFrame.ZIndex = 3
     self.ContentFrame.Parent = self.MainFrame
     CreatePadding(self.ContentFrame)
     
     -- Tab system
     self.TabFrame = Instance.new("Frame")
     self.TabFrame.Name = "TabFrame"
-    self.TabFrame.Size = UDim2.new(1, 0, 0, 28)
+    self.TabFrame.Size = UDim2.new(1, 0, 0, 35)
     self.TabFrame.BackgroundColor3 = Theme.Secondary
     self.TabFrame.BorderSizePixel = 0
-    self.TabFrame.ZIndex = 4
     self.TabFrame.Parent = self.ContentFrame
     CreateCorner(self.TabFrame)
     
@@ -220,10 +172,9 @@ function Window.new(title, size)
     -- Tab content frame
     self.TabContentFrame = Instance.new("Frame")
     self.TabContentFrame.Name = "TabContent"
-    self.TabContentFrame.Size = UDim2.new(1, 0, 1, -36)
-    self.TabContentFrame.Position = UDim2.new(0, 0, 0, 36)
+    self.TabContentFrame.Size = UDim2.new(1, 0, 1, -45)
+    self.TabContentFrame.Position = UDim2.new(0, 0, 0, 45)
     self.TabContentFrame.BackgroundTransparency = 1
-    self.TabContentFrame.ZIndex = 3
     self.TabContentFrame.Parent = self.ContentFrame
     
     -- Initialize
